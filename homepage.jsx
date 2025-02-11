@@ -30,7 +30,7 @@ export default function RobotGUI() {
         <CardContent>
           <h2 className="text-xl font-bold">Desired Map</h2>
           <MapContainer center={[51.505, -0.09]} zoom={13} className="h-full w-full">
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <TileLayer url=map.PNG />
           </MapContainer>
         </CardContent>
       </Card>

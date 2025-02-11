@@ -1,11 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapContainer, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import "leaflet-kml";
 
 export default function RobotGUI() {
   const [selectedMap, setSelectedMap] = useState("PointCloud");
+
+  useEffect(() => {
+    if (selectedMap === "GPS Tracking") {
+      fetch("/your-map-file.kml")
+        .then((res) => res.text())
+        .then((kmlText) => {
+          const parser = new DOMParser();
+          const kml = parser.parseFromString(kmlText, "text/xml");
+          const trackLayer = new L.KML(kml);
+          trackLayer.addTo(window.map); // Adding to the Leaflet map instance
+        })
+        .catch((error) => console.error("Error loading KML:", error));
+    }
+  }, [selectedMap]);
 
   return (
     <div className="grid grid-cols-2 gap-4 p-4">
@@ -28,9 +44,9 @@ export default function RobotGUI() {
             <Button onClick={() => setSelectedMap("GPS Tracking")}>GPS Tracking</Button>
             <Button onClick={() => setSelectedMap("Active Map")}>Active Map</Button>
           </div>
-          {selectedMap === "PointCloud" && <p>Displaying PointCloud Map...</p>}
-          {selectedMap === "GPS Tracking" && <p>Displaying GPS Tracking...</p>}
-          {selectedMap === "Active Map" && <p>Displaying Active Map...</p>}
+          <MapContainer center={[51.505, -0.09]} zoom={13} className="h-full w-full" whenCreated={(map) => (window.map = map)}>
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          </MapContainer>
         </CardContent>
       </Card>
 
@@ -56,3 +72,4 @@ export default function RobotGUI() {
     </div>
   );
 }
+

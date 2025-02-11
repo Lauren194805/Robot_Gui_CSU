@@ -1,4 +1,4 @@
-"homepage": "https://your-username.github.io/your-repo",
+"homepage": "https://Lauren194805.github.io/Robot_Gui_CSU",
 "scripts": {
   "predeploy": "npm run build",
   "deploy": "gh-pages -d build"

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet KML Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+</head>
+<body>
+    <div id="map" style="height: 600px;"></div>
+    <script>
+        var map = L.map('map').setView([33.5944181, -84.3284513], 16); // Center map
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Load KML file from GitHub
+        omnivore.kml('https://raw.githubusercontent.com/YOUR-USERNAME/leaflet-kml-map/main/map.kml')
+            .on('ready', function() {
+                this.getLayers().forEach(layer => layer.bindPopup(layer.feature.properties.name));
+                map.fitBounds(this.getBounds());
+            })
+            .addTo(map);
+    </script>
+</body>
+</html>

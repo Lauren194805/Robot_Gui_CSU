@@ -3,27 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet KML Map</title>
+    <title>Robot HMI - Leaflet KML & GPS</title>
+    
+    <!-- Leaflet and Omnivore -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; }
+        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
+        #kml-map, #static-map, #active-map, #camera-feed, #overlay-map {
+            width: 100%; height: 300px; border: 2px solid black;
+        }
+        #camera-container { display: flex; justify-content: center; }
+    </style>
 </head>
 <body>
-    <div id="map" style="height: 600px;"></div>
+
+    <h1>Robot HMI - Live Map, GPS & Camera</h1>
+    
+    <div class="container">
+        <!-- KML Map (GitHub KML file) -->
+        <div>
+            <h3>KML Map</h3>
+            <div id="kml-map"></div>
+        </div>
+
+        <!-- Static Map -->
+        <div>
+            <h3>Static Map</h3>
+            <div id="static-map"></div>
+        </div>
+
+        <!-- Active GPS Tracking -->
+        <div>
+            <h3>Active GPS Tracking</h3>
+            <div id="active-map"></div>
+        </div>
+
+        <!-- Live Camera Feed -->
+        <div id="camera-container">
+            <div>
+                <h3>Live Camera Feed</h3>
+                <img id="camera-feed" src="/api/camera" alt="Live Camera">
+            </div>
+
+            <!-- GPS Overlay on Static Map -->
+            <div>
+                <h3>GPS Overlay on Static Map</h3>
+                <div id="overlay-map"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        var map = L.map('map').setView([33.5944181, -84.3284513], 16); // Center map
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        // Load KML file from GitHub
-        omnivore.kml('https://raw.githubusercontent.com/YOUR-USERNAME/leaflet-kml-map/main/map.kml')
-            .on('ready', function() {
+        // Initialize KML Map
+        var kmlMap = L.map("kml-map").setView([33.5944181, -84.3284513], 16);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(kmlMap);
+        omnivore.kml("https://raw.githubusercontent.com/YOUR-USERNAME/leaflet-kml-map/main/map.kml")
+            .on("ready", function() {
                 this.getLayers().forEach(layer => layer.bindPopup(layer.feature.properties.name));
-                map.fitBounds(this.getBounds());
+                kmlMap.fitBounds(this.getBounds());
             })
-            .addTo(map);
+            .addTo(kmlMap);
+
+        // Initialize Static Map
+        const staticMap = L.map("static-map").setView([33.5944181, -84.3284513], 16);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(staticMap);
+
+        // Initialize Active GPS Tracking Map
+        const activeMap = L.map("active-map").setView([33.5944181, -84.3284513], 16);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(activeMap);
+        const gpsMarker = L.marker([33.5944181, -84.3284513]).addTo(activeMap);
+
+        // Initialize Overlay Map
+        const overlayMap = L.map("overlay-map").setView([33.5944181, -84.3284513], 16);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(overlayMap);
+        const overlayMarker = L.marker([33.5944181, -84.3284513]).addTo(overlayMap);
+
+        // WebSocket for real-time GPS tracking
+        const socket = io();
+        socket.on("gpsUpdate", (data) => {
+            gpsMarker.setLatLng([data.lat, data.lng]); // Update active tracking
+            overlayMarker.setLatLng([data.lat, data.lng]); // Update overlay map
+            activeMap.setView([data.lat, data.lng]);
+            overlayMap.setView([data.lat, data.lng]);
+        });
     </script>
+
 </body>
 </html>

@@ -45,10 +45,19 @@
 
         <!-- Live Camera Feed -->
         <div id="camera-container">
-            <div>
-                <h3>Live Camera Feed</h3>
-                <img id="camera-feed" src="/api/camera" alt="Live Camera">
-            </div>
+            <div class="camera-container">
+    <h1>Live Camera Feed</h1>
+    <video
+      id="cameraFeed"
+      controls
+      autoplay
+      muted
+      width="100%"
+    >
+      <source src="http://168.28.69.9::9925/stream" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+  </div>
 
             <!-- GPS Overlay on Static Map -->
             <div>

@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, "public")));
 
 // Mock GPS Tracking Data (Replace with real GPS device API)
-let gpsData = { lat: 37.7749, lng: -122.4194 }; // Default: San Francisco
+let gpsData = { lat: 33.5944181,, lng: -84.3284513 }; // Default: San Francisco
 
 // GPS Tracking API
 app.get("/api/gps", (req, res) => {

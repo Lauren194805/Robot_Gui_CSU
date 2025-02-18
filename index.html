@@ -61,8 +61,8 @@
     <script>
         // Initialize KML Map
         var kmlMap = L.map("kml-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(kmlMap);
-        omnivore.kml("https://raw.githubusercontent.com/YOUR-USERNAME/leaflet-kml-map/main/map.kml")
+        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(kmlMap);
+        omnivore.kml("https://raw.githubusercontent.com/lauren194805/leaflet-kml-map/main/map.kml")
             .on("ready", function() {
                 this.getLayers().forEach(layer => layer.bindPopup(layer.feature.properties.name));
                 kmlMap.fitBounds(this.getBounds());
@@ -71,7 +71,7 @@
 
         // Initialize Static Map
         const staticMap = L.map("static-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(staticMap);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(staticMap);
 
         // Initialize Active GPS Tracking Map
         const activeMap = L.map("active-map").setView([33.5944181, -84.3284513], 16);

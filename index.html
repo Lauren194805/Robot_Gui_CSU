@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robot HMI - Leaflet KML & GPS</title>
+    <title>Robot HMI - Live GPS & Camera</title>
     
     <!-- Leaflet and Omnivore -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -22,10 +22,11 @@
 </head>
 <body>
 
-    <h1>Robot HMI - Live Map, GPS & Camera</h1>
+    <h1>Robot HMI - Live GPS & Camera</h1>
+    <p id="gps-data">Loading...</p>
     
     <div class="container">
-        <!-- KML Map (GitHub KML file) -->
+        <!-- KML Map -->
         <div>
             <h3>KML Map</h3>
             <div id="kml-map"></div>
@@ -45,32 +46,36 @@
 
         <!-- Live Camera Feed -->
         <div id="camera-container">
-            <div class="camera-container">
-    <h1>Live Camera Feed</h1>
-    <video
-      id="cameraFeed"
-      controls
-      autoplay
-      muted
-      width="100%"
-    >
-      <source src="http://168.28.69.9::9925/stream" type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-  </div>
+            <h3>Live Camera Feed</h3>
+            <video id="cameraFeed" controls autoplay muted width="100%">
+                <source src="http://168.28.69.9:9925/stream" type="video/mp4" />
+                Your browser does not support the video tag.
+            </video>
+        </div>
 
-            <!-- GPS Overlay on Static Map -->
-            <div>
-                <h3>GPS Overlay on Static Map</h3>
-                <div id="overlay-map"></div>
-            </div>
+        <!-- GPS Overlay Map -->
+        <div>
+            <h3>GPS Overlay on Static Map</h3>
+            <div id="overlay-map"></div>
         </div>
     </div>
 
     <script>
+        function updateGPS() {
+            fetch("/gps")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.Latitude && data.Longitude) {
+                        document.getElementById("gps-data").innerHTML = 
+                            `Latitude: ${data.Latitude}, Longitude: ${data.Longitude}, Time: ${data.Timestamp}`;
+                    }
+                });
+        }
+        setInterval(updateGPS, 3000);
+
         // Initialize KML Map
         var kmlMap = L.map("kml-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(kmlMap);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(kmlMap);
         omnivore.kml("https://raw.githubusercontent.com/lauren194805/leaflet-kml-map/main/map.kml")
             .on("ready", function() {
                 this.getLayers().forEach(layer => layer.bindPopup(layer.feature.properties.name));
@@ -78,16 +83,14 @@
             })
             .addTo(kmlMap);
 
-        // Initialize Static Map
+        // Initialize Static, Active, and Overlay Maps
         const staticMap = L.map("static-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(staticMap);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(staticMap);
 
-        // Initialize Active GPS Tracking Map
         const activeMap = L.map("active-map").setView([33.5944181, -84.3284513], 16);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(activeMap);
         const gpsMarker = L.marker([33.5944181, -84.3284513]).addTo(activeMap);
 
-        // Initialize Overlay Map
         const overlayMap = L.map("overlay-map").setView([33.5944181, -84.3284513], 16);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(overlayMap);
         const overlayMarker = L.marker([33.5944181, -84.3284513]).addTo(overlayMap);

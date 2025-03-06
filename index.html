@@ -24,26 +24,8 @@
 
     <h1>Robot HMI - Live GPS & Camera</h1>
     <p id="gps-data">Loading...</p>
-    
+
     <div class="container">
-        <!-- KML Map -->
-        <div>
-            <h3>KML Map</h3>
-            <div id="kml-map"></div>
-        </div>
-
-        <!-- Static Map -->
-        <div>
-            <h3>Static Map</h3>
-            <div id="static-map"></div>
-        </div>
-
-        <!-- Active GPS Tracking -->
-        <div>
-            <h3>Active GPS Tracking</h3>
-            <div id="active-map"></div>
-        </div>
-
         <!-- Live Camera Feed -->
         <div id="camera-container">
             <h3>Live Camera Feed</h3>
@@ -60,6 +42,17 @@
         </div>
     </div>
 
+        <!-- Static Map -->
+        <div>
+            <h3>Static Map</h3>
+            <div id="static-map"></div>
+        </div>
+
+        <!-- Active GPS Tracking -->
+        <div>
+            <h3>Active GPS Tracking</h3>
+            <div id="active-map"></div>
+        </div>
     <script>
         function updateGPS() {
             fetch("/gps")
@@ -73,20 +66,16 @@
         }
         setInterval(updateGPS, 3000);
 
-        // Initialize KML Map
-        var kmlMap = L.map("kml-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(kmlMap);
+        // Initialize Static Map, Active, and Overlay Maps
+        var staticMap = L.map("static-map").setView([33.5944181, -84.3284513], 16);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(staticMap);
         omnivore.kml("https://raw.githubusercontent.com/lauren194805/leaflet-kml-map/main/map.kml")
             .on("ready", function() {
                 this.getLayers().forEach(layer => layer.bindPopup(layer.feature.properties.name));
-                kmlMap.fitBounds(this.getBounds());
+                staticMap.fitBounds(this.getBounds());
             })
-            .addTo(kmlMap);
-
-        // Initialize Static, Active, and Overlay Maps
-        const staticMap = L.map("static-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(staticMap);
-
+            .addTo(staticMap);
+      
         const activeMap = L.map("active-map").setView([33.5944181, -84.3284513], 16);
         L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(activeMap);
         const gpsMarker = L.marker([33.5944181, -84.3284513]).addTo(activeMap);

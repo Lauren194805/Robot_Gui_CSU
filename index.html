@@ -75,7 +75,7 @@
 
         // Initialize KML Map
         var kmlMap = L.map("kml-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(kmlMap);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(kmlMap);
         omnivore.kml("https://raw.githubusercontent.com/lauren194805/leaflet-kml-map/main/map.kml")
             .on("ready", function() {
                 this.getLayers().forEach(layer => layer.bindPopup(layer.feature.properties.name));
@@ -85,14 +85,14 @@
 
         // Initialize Static, Active, and Overlay Maps
         const staticMap = L.map("static-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(staticMap);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(staticMap);
 
         const activeMap = L.map("active-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(activeMap);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(activeMap);
         const gpsMarker = L.marker([33.5944181, -84.3284513]).addTo(activeMap);
 
         const overlayMap = L.map("overlay-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(overlayMap);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(overlayMap);
         const overlayMarker = L.marker([33.5944181, -84.3284513]).addTo(overlayMap);
 
         // WebSocket for real-time GPS tracking

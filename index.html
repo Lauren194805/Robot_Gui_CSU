@@ -19,41 +19,16 @@
         }
         #camera-container { display: flex; justify-content: center; }
     </style>
-</head>
-<body>
-
-    <h1>Robot HMI - Live GPS & Camera</h1>
-    <p id="gps-data">Loading...</p>
-
-    <div class="container">
-        <!-- Live Camera Feed -->
-        <div id="camera-container">
-            <h3>Live Camera Feed</h3>
-            <video id="cameraFeed" controls autoplay muted width="100%">
-                <source src="http://168.28.69.9:9925/stream" type="video/mp4" />
-                Your browser does not support the video tag.
-            </video>
-        </div>
-
-        <!-- GPS Overlay Map -->
-        <div>
-            <h3>GPS Overlay on Static Map</h3>
-            <div id="overlay-map"></div>
-        </div>
-    </div>
-
-        <!-- Static Map -->
-        <div>
-            <h3>Static Map</h3>
-            <div id="static-map"></div>
-        </div>
-
-        <!-- Active GPS Tracking -->
-        <div>
-            <h3>Active GPS Tracking</h3>
-            <div id="active-map"></div>
-        </div>
     <script>
+        async function fetchGPSData() {
+            const response = await fetch("/gps");
+            const data = await response.json();
+            document.getElementById("latitude").innerText = "Latitude: " + data.latitude;
+            document.getElementById("longitude").innerText = "Longitude: " + data.longitude;
+            document.getElementById("timestamp").innerText = "Timestamp: " + data.timestamp;
+        }
+        setInterval(fetchGPSData, 2000); // Update every 2 seconds
+
         function updateGPS() {
             fetch("/gps")
                 .then(response => response.json())
@@ -93,6 +68,48 @@
             overlayMap.setView([data.lat, data.lng]);
         });
     </script>
+</head>
+<body>
+
+    <h1>Robot HMI - Live GPS & Camera</h1>
+    <p id="gps-data">Loading...</p>
+
+    <!-- GPS Data -->
+    <div>
+        <h3>Real-Time GPS Data</h3>
+        <p id="latitude">Latitude: Loading...</p>
+        <p id="longitude">Longitude: Loading...</p>
+        <p id="timestamp">Timestamp: Loading...</p>
+    </div>
+
+    <div class="container">
+        <!-- Live Camera Feed -->
+        <div id="camera-container">
+            <h3>Live Camera Feed</h3>
+            <video id="cameraFeed" controls autoplay muted width="100%">
+                <source src="http://168.28.69.9:5900/stream" type="video/mp4" />
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <!-- GPS Overlay Map -->
+        <div>
+            <h3>GPS Overlay on Static Map</h3>
+            <div id="overlay-map"></div>
+        </div>
+    </div>
+
+    <!-- Static Map -->
+    <div>
+        <h3>Static Map</h3>
+        <div id="static-map"></div>
+    </div>
+
+    <!-- Active GPS Tracking -->
+    <div>
+        <h3>Active GPS Tracking</h3>
+        <div id="active-map"></div>
+    </div>
 
 </body>
 </html>

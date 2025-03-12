@@ -12,49 +12,53 @@
     <script src="/socket.io/socket.io.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 0.5; }
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; }
         .container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
-         #static-map, #active-map, #overlay-map {
+        #static-map, #active-map, #overlay-map {
             width: 50%; height: 300px; border: 2px solid black;
         }
         #camera-container { display: flex; justify-content: center; }
     </style>
     <script>
         async function fetchGPSData() {
-            const response = await fetch("/gps");
-            const data = await response.json();
-            document.getElementById("latitude").innerText = "Latitude: " + data.latitude;
-            document.getElementById("longitude").innerText = "Longitude: " + data.longitude;
-            document.getElementById("timestamp").innerText = "Timestamp: " + data.timestamp;
+            try {
+                const response = await fetch("/gps");
+                const data = await response.json();
+                
+                if (data.latitude && data.longitude) {
+                    document.getElementById("gps-data").innerText = 
+                        `Latitude: ${data.latitude}, Longitude: ${data.longitude}, Time: ${data.timestamp}`;
+                    
+                    document.getElementById("latitude").innerText = `Latitude: ${data.latitude}`;
+                    document.getElementById("longitude").innerText = `Longitude: ${data.longitude}`;
+                    document.getElementById("timestamp").innerText = `Timestamp: ${data.timestamp}`;
+                }
+            } catch (error) {
+                console.error("Error fetching GPS data:", error);
+            }
         }
-        setInterval(fetchGPSData, 2000); // Update every 2 seconds
+        setInterval(fetchGPSData, 3000);
 
-        function updateGPS() {
-            fetch("/gps")
-                .then(response => response.json())
-                .then(data => {
-                    if (data.Latitude && data.Longitude) {
-                        document.getElementById("gps-data").innerHTML = 
-                            `Latitude: ${data.Latitude}, Longitude: ${data.Longitude}, Time: ${data.Timestamp}`;
-                    }
-                });
-        }
-        setInterval(updateGPS, 3000);
-
-        // Initialize Static Map, Active, and Overlay Maps
+        // Initialize Static Map
         var staticMap = L.map("static-map").setView([33.5944181, -84.3284513], 16);
         L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(staticMap);
+
         omnivore.kml("https://raw.githubusercontent.com/lauren194805/leaflet-kml-map/main/map.kml")
             .on("ready", function() {
-                this.getLayers().forEach(layer => layer.bindPopup(layer.feature.properties.name));
+                this.getLayers().forEach(layer => layer.bindPopup(layer.feature?.properties?.name || "Unnamed"));
                 staticMap.fitBounds(this.getBounds());
+            })
+            .on("error", function() {
+                console.error("Failed to load KML file.");
             })
             .addTo(staticMap);
       
+        // Active GPS Map
         const activeMap = L.map("active-map").setView([33.5944181, -84.3284513], 16);
         L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(activeMap);
         const gpsMarker = L.marker([33.5944181, -84.3284513]).addTo(activeMap);
 
+        // GPS Overlay Map
         const overlayMap = L.map("overlay-map").setView([33.5944181, -84.3284513], 16);
         L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(overlayMap);
         const overlayMarker = L.marker([33.5944181, -84.3284513]).addTo(overlayMap);
@@ -62,10 +66,12 @@
         // WebSocket for real-time GPS tracking
         const socket = io();
         socket.on("gpsUpdate", (data) => {
-            gpsMarker.setLatLng([data.lat, data.lng]); // Update active tracking
-            overlayMarker.setLatLng([data.lat, data.lng]); // Update overlay map
-            activeMap.setView([data.lat, data.lng]);
-            overlayMap.setView([data.lat, data.lng]);
+            if (data.lat && data.lng) {
+                gpsMarker.setLatLng([data.lat, data.lng]);
+                overlayMarker.setLatLng([data.lat, data.lng]);
+                activeMap.setView([data.lat, data.lng]);
+                overlayMap.setView([data.lat, data.lng]);
+            }
         });
     </script>
 </head>
@@ -87,8 +93,7 @@
         <div id="camera-container">
             <h3>Live Camera Feed</h3>
             <video id="cameraFeed" controls autoplay muted width="100%">
-                <img src="http://168.28.60.9:2947/video_feed" type="video/mp4"/>
-                <source src="168.28.60.9:2947/stream" t />
+                <source src="http://168.28.60.9:2947/stream" type="video/mp4"/>
                 Your browser does not support the video tag.
             </video>
         </div>

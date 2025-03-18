@@ -79,7 +79,7 @@
     <script>
         // ==================== KML Map ====================
         var map = L.map("map-container").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(map);
         omnivore.kml("https://raw.githubusercontent.com/lauren194805/leaflet-kml-map/main/map.kml")
             .on("ready", function() { map.fitBounds(this.getBounds()); })
             .addTo(map);

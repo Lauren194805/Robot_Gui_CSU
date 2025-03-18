@@ -3,119 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Robot HMI - Live GPS & Camera</title>
-    
+    <title>Robot HMI - Quadrant View</title>
+
     <!-- Leaflet and Omnivore -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-omnivore@0.3.4/leaflet-omnivore.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Three.js for 3D LiDAR Visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 0; }
-        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
-        #static-map, #active-map, #overlay-map {
-            width: 50%; height: 300px; border: 2px solid black;
+        body { font-family: Arial, sans-serif; margin: 0; }
+        .quadrant-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            height: 100vh;
+            padding: 10px;
         }
-        #camera-container { display: flex; justify-content: center; }
+        .quadrant {
+            border: 2px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f5f5;
+            overflow: hidden;
+            position: relative;
+        }
+        #map-container, #gps-tracking {
+            width: 100%;
+            height: 100%;
+        }
+        #camera-feed {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #lidar-visualization {
+            width: 100%;
+            height: 100%;
+            background: black;
+        }
     </style>
-    <script>
-        async function fetchGPSData() {
-            try {
-                const response = await fetch("/gps");
-                const data = await response.json();
-                
-                if (data.latitude && data.longitude) {
-                    document.getElementById("gps-data").innerText = 
-                        `Latitude: ${data.latitude}, Longitude: ${data.longitude}, Time: ${data.timestamp}`;
-                    
-                    document.getElementById("latitude").innerText = `Latitude: ${data.latitude}`;
-                    document.getElementById("longitude").innerText = `Longitude: ${data.longitude}`;
-                    document.getElementById("timestamp").innerText = `Timestamp: ${data.timestamp}`;
-                }
-            } catch (error) {
-                console.error("Error fetching GPS data:", error);
-            }
-        }
-        setInterval(fetchGPSData, 3000);
 
-        // Initialize Static Map
-        var staticMap = L.map("static-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(staticMap);
-
-        omnivore.kml("https://raw.githubusercontent.com/lauren194805/leaflet-kml-map/main/map.kml")
-            .on("ready", function() {
-                this.getLayers().forEach(layer => layer.bindPopup(layer.feature?.properties?.name || "Unnamed"));
-                staticMap.fitBounds(this.getBounds());
-            })
-            .on("error", function() {
-                console.error("Failed to load KML file.");
-            })
-            .addTo(staticMap);
-      
-        // Active GPS Map
-        const activeMap = L.map("active-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(activeMap);
-        const gpsMarker = L.marker([33.5944181, -84.3284513]).addTo(activeMap);
-
-        // GPS Overlay Map
-        const overlayMap = L.map("overlay-map").setView([33.5944181, -84.3284513], 16);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/map.png").addTo(overlayMap);
-        const overlayMarker = L.marker([33.5944181, -84.3284513]).addTo(overlayMap);
-
-        // WebSocket for real-time GPS tracking
-        const socket = io();
-        socket.on("gpsUpdate", (data) => {
-            if (data.lat && data.lng) {
-                gpsMarker.setLatLng([data.lat, data.lng]);
-                overlayMarker.setLatLng([data.lat, data.lng]);
-                activeMap.setView([data.lat, data.lng]);
-                overlayMap.setView([data.lat, data.lng]);
-            }
-        });
-    </script>
 </head>
 <body>
 
-    <h1>Robot HMI - Live GPS & Camera</h1>
-    <p id="gps-data">Loading...</p>
+    <h1 style="text-align: center;">Robot HMI - Live GPS, Camera, LiDAR</h1>
 
-    <!-- GPS Data -->
-    <div>
-        <h3>Real-Time GPS Data</h3>
-        <p id="latitude">Latitude: Loading...</p>
-        <p id="longitude">Longitude: Loading...</p>
-        <p id="timestamp">Timestamp: Loading...</p>
-    </div>
+    <div class="quadrant-container">
+        <!-- Top Left: KML Map -->
+        <div class="quadrant">
+            <h3>KML Map</h3>
+            <div id="map-container"></div>
+        </div>
 
-    <div class="container">
-        <!-- Live Camera Feed -->
-        <div id="camera-container">
-            <h3>Live Camera Feed</h3>
-            <video id="cameraFeed" controls autoplay muted width="100%">
-                <source src="http://168.28.60.9::2947/stream" type="video/mp4"/>
+        <!-- Top Right: Live Camera Feed -->
+        <div class="quadrant">
+            <h3>Live Camera</h3>
+            <video id="camera-feed" controls autoplay muted>
+                <source src="http://168.28.60.9:2947/stream" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
 
-        <!-- GPS Overlay Map -->
-        <div>
-            <h3>GPS Overlay on Static Map</h3>
-            <div id="overlay-map"></div>
+        <!-- Bottom Left: GPS Tracking -->
+        <div class="quadrant">
+            <h3>GPS Tracking</h3>
+            <div id="gps-tracking"></div>
+        </div>
+
+        <!-- Bottom Right: LiDAR 3D Visualization -->
+        <div class="quadrant">
+            <h3>LiDAR Point Cloud</h3>
+            <canvas id="lidar-visualization"></canvas>
         </div>
     </div>
 
-    <!-- Static Map -->
-    <div>
-        <h3>Static Map</h3>
-        <div id="static-map"></div>
-    </div>
+    <script>
+        // ==================== KML Map (Top Left) ====================
+        var map = L.map("map-container").setView([33.5944181, -84.3284513], 16);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+        omnivore.kml("https://raw.githubusercontent.com/lauren194805/leaflet-kml-map/main/map.kml")
+            .on("ready", function() { map.fitBounds(this.getBounds()); })
+            .addTo(map);
 
-    <!-- Active GPS Tracking -->
-    <div>
-        <h3>Active GPS Tracking</h3>
-        <div id="active-map"></div>
-    </div>
+        // ==================== GPS Tracking (Bottom Left) ====================
+        var gpsMap = L.map("gps-tracking").setView([33.5944181, -84.3284513], 16);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(gpsMap);
+        var gpsMarker = L.marker([33.5944181, -84.3284513]).addTo(gpsMap);
+
+        // WebSocket for GPS Updates
+        const socket = io();
+        socket.on("gpsUpdate", (data) => {
+            if (data.lat && data.lng) {
+                gpsMarker.setLatLng([data.lat, data.lng]);
+                gpsMap.setView([data.lat, data.lng]);
+            }
+        });
+
+        // ==================== LiDAR 3D Visualization (Bottom Right) ====================
+        let scene, camera, renderer, points, pointGeometry, pointMaterial;
+        function initLiDARVisualization() {
+            const canvas = document.getElementById("lidar-visualization");
+
+            // Create Scene
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+            camera.position.z = 10;
+
+            renderer = new THREE.WebGLRenderer({ canvas });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+            // Create Point Cloud Material
+            pointGeometry = new THREE.BufferGeometry();
+            pointMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.05 });
+
+            points = new THREE.Points(pointGeometry, pointMaterial);
+            scene.add(points);
+        }
+
+        function updateLiDARPointCloud(lidarData) {
+            if (!lidarData || lidarData.length === 0) return;
+
+            const positions = new Float32Array(lidarData.length * 3);
+            lidarData.forEach((point, index) => {
+                positions[index * 3] = point.x;  // X
+                positions[index * 3 + 1] = point.y; // Y
+                positions[index * 3 + 2] = point.z; // Z
+            });
+
+            pointGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            pointGeometry.needsUpdate = true;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+
+        initLiDARVisualization();
+        animate();
+
+        // WebSocket for LiDAR Data
+        socket.on("lidarUpdate", (data) => {
+            updateLiDARPointCloud(data);
+        });
+
+    </script>
 
 </body>
 </html>
